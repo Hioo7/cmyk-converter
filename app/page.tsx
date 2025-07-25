@@ -61,20 +61,24 @@ export default function Home() {
       const formData = new FormData();
       formData.append('image', imageFile.file);
 
+      console.log('Sending request to /api/convert');
+      
       const response = await fetch('/api/convert', {
         method: 'POST',
         body: formData,
-        headers: {
-          'Accept': 'application/json',
-        },
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Conversion failed: ${response.status} ${errorText}`);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('API Error:', errorData);
+        throw new Error(`Conversion failed: ${response.status} - ${errorData.error || 'Unknown error'}`);
       }
 
       const result = await response.json();
+      console.log('Conversion successful:', result);
 
       setImages((prev) =>
         prev.map((img) =>

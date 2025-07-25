@@ -6,16 +6,22 @@ export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('API route called - POST method');
+    
     const formData = await request.formData();
     const file = formData.get('image') as File;
 
+    console.log('File received:', file?.name, file?.type);
+
     if (!file) {
+      console.log('No file provided');
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
+      console.log('Invalid file type:', file.type);
       return NextResponse.json(
         { error: 'Invalid file type. Only JPG, JPEG, and PNG are supported.' },
         { status: 400 }
@@ -25,6 +31,8 @@ export async function POST(request: NextRequest) {
     // Convert File to Buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+
+    console.log('Processing image with Sharp...');
 
     // Get image metadata
     const metadata = await sharp(buffer).metadata();
@@ -43,6 +51,8 @@ export async function POST(request: NextRequest) {
       })
       .toColorspace('cmyk')
       .toBuffer();
+
+    console.log('Conversion successful');
 
     // Convert buffers to base64 for direct transmission
     const previewBase64 = `data:image/jpeg;base64,${previewBuffer.toString('base64')}`;
@@ -70,7 +80,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Handle OPTIONS for CORS
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 200,
